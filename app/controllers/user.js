@@ -1,10 +1,22 @@
+// const { default: Users } = require('../models/users');
+
 module.exports = (express) => {
 
     const User = [];
 
+    let sequelize = require("sequelize");
     let moment = require('moment-timezone');
 
-    User.addUser = (req, res) => {
+    User.addUser = async (req, res) => {
+
+        let Sequelize = require("sequelize");
+
+        let sequelize = new Sequelize('greeting-cards', 'root', '', {
+            host: 'localhost',
+            dialect: 'mysql'
+        });
+
+        let UsersModels = require("../models/users")(sequelize, Sequelize);
 
         process.env.TZ = 'Asia/Jakarta'; // Depends on server time
 
@@ -31,13 +43,39 @@ module.exports = (express) => {
             'birthday': rbody.birthday,
             'location': rbody.location,
             'send_datetime': new Date(s).toLocaleDateString() + ' ' + new Date(s).toLocaleTimeString(),
-            'create_datetime': new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-            'send_status': 0,
+            'created_datetime': new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+            'status': 0,
             'letter': 'Hey, ' + rbody.first_name + rbody.last_name + ' it s your birthday'
         }
 
+        const UsersResult = await UsersModels.findAll({
+            where: {
+                first_name: rbody.first_name,
+                last_name: rbody.last_name,
+            }
+        });
+
+        if (UsersResult.length == 0) {
+
+            UsersModels.create(data).then(function (users) {
+                if (users) {
+                    res.send(users);
+                } else {
+                    res.status(400).send('Error in insert new record');
+                }
+            });
+
+        } else {
+
+            res.status(400).send('User exists');
+
+        }
+        // res.send(UsersResult);
+        // console.log(UsersResult);
+
+
         // let data_return = [];
-        res.send(data);
+        // res.send(data);
 
     };
 
